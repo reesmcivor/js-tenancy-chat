@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import conversations from "js-tenancy-chat/api/conversations";
 
 
-
 import { usePrivateChannels } from 'js-tenancy-core/store/channels';
 import Toast from 'react-native-root-toast';
 import ChatMessage from "../../../components/ChatMessage";
+import { FlashList } from "@shopify/flash-list";
 
 const NOTIFICATION_EVENT =
   ".App\\Events\\NewChatMessage"
@@ -64,7 +64,7 @@ const Notifications = () => {
 const ConversationScreen = ({ route }) => {
 
     const [isLoading, setIsLoading] = useState(false);
-    const [conversation, setConversation] = useState(false);
+    const [conversation, setConversation] = useState([]);
     const [message, setMessage] = useState('');
     const { conversationId } = route.params;
 
@@ -110,33 +110,30 @@ const ConversationScreen = ({ route }) => {
         setIsLoading(false);
     };
     
-    
     return (
-        <View className="flex flex-1">
-            <View>
-                <TouchableHighlight onPress={fetchConversation}>
-                    <Text>REFRESH</Text>
-                </TouchableHighlight>
-                
-    
-                <ScrollView>
-                { 
-                    conversation && conversation?.map((message) => {
-                        return (
-                            <View key={message.id} className={`p-2 flex bg-red-100 m-2`}>
-                                <Text>{message.content}</Text>
-                                <Text>{message?.user?.email}</Text>
-                            </View>
-                        );
-                    })
-                }
-                    <TextInput className="bg-gray-100 border p-2" onChangeText={onMessageChange} />
-                    <Button title="Send" onPress={sendMessageHandler} />
-                </ScrollView>
-            </View>
-        </View>
-      
+      <>
+        <TouchableHighlight onPress={fetchConversation}>
+          <Text>REFRESH!</Text>
+        </TouchableHighlight>
+        <FlashList
+            estimatedItemSize={30}
+            inverted
+            data={[...conversation].reverse()}
+            renderItem={({ item }) => {
+              return (
+                <View className="border rounded-full bg-grey-300 mb-2">
+                  <View className="flex flex-row p-4">
+                    <Text>{JSON.stringify(item.content)}</Text>
+                  </View>
+                </View>
+              )
+            }}
+          />
+          <TextInput className="bg-gray-100 border p-2" onChangeText={onMessageChange} />
+          <Button title="Send" onPress={sendMessageHandler} />
+        </>
     );
-}
+    
+};
 
 export default ConversationScreen;

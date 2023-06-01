@@ -67,6 +67,7 @@ const ListScreen = () => {
     if(!response.ok) {
       console.log(response);
     } else {
+      console.log(response.data);
       setConvos(response.data)
       console.log(response);
     }
@@ -95,8 +96,6 @@ const ListScreen = () => {
         return <View><Text>loading123...</Text></View>
     }
 
-    
-
 
     return (
         <ScrollView className="bg-red">
@@ -104,7 +103,7 @@ const ListScreen = () => {
             <Button title="New Conversation" onPress={newConversation} />
 
           
-            { convos && convos.map((convo) => {
+            { convos?.length > 0 && convos?.map((convo) => {
                 return (
                     <TouchableOpacity key={convo.id} className="mx-5 mb-5 border p-2 bg-gray-400 z-10" 
                         onPress={() => navigationRef.current?.navigate(
