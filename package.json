@@ -1,5 +1,6 @@
 {
   "name": "js-tenancy-chat",
+  "type": "module",
   "version": "1.0.0",
   "description": "Chat react laravel tenancy",
   "main": "index.js",

@@ -1,66 +1,10 @@
-import { View, Text, TextInput, Button, TouchableHighlight, ScrollView } from "react-native";
-import { useEffect, useState } from "react";
+import { View, Text, TextInput, Button, TouchableHighlight } from "react-native";
+import { useEffect, useState, useCallback } from "react";
 import conversations from "js-tenancy-chat/api/conversations";
-
-
-import { usePrivateChannels } from 'js-tenancy-core/store/channels';
-import Toast from 'react-native-root-toast';
-import ChatMessage from "../../../components/ChatMessage";
+import useNotificationChannel from "js-tenancy-chat/hooks/useNotificationChannel";
 import { FlashList } from "@shopify/flash-list";
+import ChatMessage from "../../../components/ChatMessage";
 
-const NOTIFICATION_EVENT =
-  ".App\\Events\\NewChatMessage"
-
-
-function useNotificationChannel(authUserId, onChange) {
-    const channels = usePrivateChannels(authUserId);
-    useEffect(() => {
-      if (channels) {
-        channels.listen(NOTIFICATION_EVENT, onChange);
-        // same as channels.notification(onChange)
-        return () => {
-          channels.stopListening(NOTIFICATION_EVENT);
-        };
-      }
-    }, [channels, onChange]);
-  }
-
-const Notifications = () => {
-
-    const { user: { id: authUserId } } = useAuth();
-    //const conversation = useApi(conversations.getConversation);
-
-    //console.log(conversation);
-
-
-    const [notifications, setNotifications] = useState([]);
-    const handleNotificationsEvent = useCallback(notification => {
-      Toast.show(notification.message);
-      setNotifications(existingNotifications =>
-        [notification].concat(existingNotifications)
-      );
-    }, []);
-
-    useNotificationChannel(authUserId, handleNotificationsEvent);
-  
-
-    return (
-      <ScrollView>
-        {notifications.map(n => {
-          return (
-            <ChatMessage 
-              key={n.id}
-              message={n.message} 
-              sender="Alice" 
-              isSender={Math.random() < 0.5} 
-              avatar="https://example.com/alice-avatar.png" 
-            />
-          );
-        })}
-      </ScrollView>
-    );
-  }
-  
 const ConversationScreen = ({ route }) => {
 
     const [isLoading, setIsLoading] = useState(false);
@@ -68,14 +12,27 @@ const ConversationScreen = ({ route }) => {
     const [message, setMessage] = useState('');
     const { conversationId } = route.params;
 
+    // Channels
+    const NOTIFICATION_EVENT = ".ReesMcIvor\\Chat\\Events\\NewChatMessage"
+    const { user: { id: authUserId } } = useAuth();
+    
+    const handleNotificationsEvent = useCallback(message => {
+      fetchConversation();
+      setConversation(existingConversation =>
+        existingConversation.concat(message.data)
+      );
+    }, []);
+
+    useNotificationChannel(NOTIFICATION_EVENT, authUserId, handleNotificationsEvent);
+
+
     const fetchConversation = async () => {
 
         setIsLoading(true);
         const response = await conversations.getConversation(conversationId);
         if(!response.ok) {
-            console.log(response);
+            console.error(response);
         } else {
-            console.log(response.data);
             setConversation(response.data);
         }
         setIsLoading(false);
@@ -83,7 +40,6 @@ const ConversationScreen = ({ route }) => {
     };
 
     useEffect(() => {
-        //console.log('conversationId', conversationId);
         fetchConversation();
     }, []);
 
@@ -101,11 +57,12 @@ const ConversationScreen = ({ route }) => {
             content: message
         });
         if(!response.ok) {
-            console.log(response);
+            console.warn(response);
         } else {
-            console.log(response.data);
-            setMessage('');
-            await fetchConversation();
+            //setMessage('');
+            setConversation(existingConversation =>
+              existingConversation.concat([response?.data?.data])
+            );
         }
         setIsLoading(false);
     };
@@ -121,11 +78,12 @@ const ConversationScreen = ({ route }) => {
             data={[...conversation].reverse()}
             renderItem={({ item }) => {
               return (
-                <View className="border rounded-full bg-grey-300 mb-2">
-                  <View className="flex flex-row p-4">
-                    <Text>{JSON.stringify(item.content)}</Text>
-                  </View>
-                </View>
+                <ChatMessage 
+                  key={item.created_at.toString()}
+                  message={item.content ?? item.message} 
+                  sender="Alice"
+                  avatar="https://example.com/alice-avatar.png" 
+                />
               )
             }}
           />

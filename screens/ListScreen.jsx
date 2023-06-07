@@ -1,60 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, ScrollView, Button, TouchableOpacity } from "react-native";
-import useAuth from "js-tenancy-auth/hooks/useAuth";
 
-import { usePrivateChannels } from 'js-tenancy-core/store/channels';
-import Toast from 'react-native-root-toast';
-import ChatMessage from "../../../components/ChatMessage";
 import conversations from "js-tenancy-chat/api/conversations";
 import { navigationRef } from "js-tenancy-core/hooks/rootNavigation";
 
-const NOTIFICATION_EVENT =
-  ".App\\Events\\NewChatMessage"
-
-
-function useNotificationChannel(authUserId, onChange) {
-    const channels = usePrivateChannels(authUserId);
-    useEffect(() => {
-      if (channels) {
-        channels.listen(NOTIFICATION_EVENT, onChange);
-        // same as channels.notification(onChange)
-        return () => {
-          channels.stopListening(NOTIFICATION_EVENT);
-        };
-      }
-    }, [channels, onChange]);
-  }
-
-const Notifications = () => {
-
-    const { user: { id: authUserId } } = useAuth();
-    const [notifications, setNotifications] = useState([]);
-    const handleNotificationsEvent = useCallback(notification => {
-      Toast.show(notification.message);
-      setNotifications(existingNotifications =>
-        [notification].concat(existingNotifications)
-      );
-    }, []);
-
-    useNotificationChannel(authUserId, handleNotificationsEvent);
-  
-
-    return (
-      <ScrollView>
-        {notifications.map(n => {
-          return (
-            <ChatMessage 
-              key={n.id}
-              message={n.message} 
-              sender="Alice" 
-              isSender={Math.random() < 0.5} 
-              avatar="https://example.com/alice-avatar.png" 
-            />
-          );
-        })}
-      </ScrollView>
-    );
-  }
 
 const ListScreen = () => {
 
@@ -65,11 +14,9 @@ const ListScreen = () => {
     setLoading(true);
     const response = await conversations.getConversations();
     if(!response.ok) {
-      console.log(response);
+      console.warn(response);
     } else {
-      console.log(response.data);
       setConvos(response.data)
-      console.log(response);
     }
     setLoading(false);
   }
@@ -117,7 +64,6 @@ const ListScreen = () => {
                 )
               })  
             }
-            <Notifications />
             
         </ScrollView>
       
