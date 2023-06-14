@@ -5,6 +5,7 @@ import ListScreen from 'js-tenancy-chat/screens/ListScreen';
 
 const ChatNavigator = () => {
     
+    
     const Stack = createStackNavigator();
 
     return (

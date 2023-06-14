@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, Button, TouchableOpacity } from "react-native";
-
+import { View, Text, ScrollView, Button } from "react-native";
 import conversations from "js-tenancy-chat/api/conversations";
-import { navigationRef } from "js-tenancy-core/hooks/rootNavigation";
-
+import { ListItem } from "js-tenancy-chat/components/conversations/ListItem";
 
 const ListScreen = () => {
 
@@ -14,9 +12,9 @@ const ListScreen = () => {
     setLoading(true);
     const response = await conversations.getConversations();
     if(!response.ok) {
-      console.warn(response);
+      console.error(response);
     } else {
-      setConvos(response.data)
+      setConvos(response.data.data)
     }
     setLoading(false);
   }
@@ -46,24 +44,18 @@ const ListScreen = () => {
 
     return (
         <ScrollView className="bg-red">
-            <Text>CHAT</Text>
-            <Button title="New Conversation" onPress={newConversation} />
+            
+            <Button title="Start New Conversation" onPress={newConversation} />
 
           
-            { convos?.length > 0 && convos?.map((convo) => {
-                return (
-                    <TouchableOpacity key={convo.id} className="mx-5 mb-5 border p-2 bg-gray-400 z-10" 
-                        onPress={() => navigationRef.current?.navigate(
-                            'Conversation', {
-                                navigator: 'Conversations',
-                                conversationId: convo.id
-                            })}>
-                        <Text>{convo.created_at} - {convo.subject} oksahjd khgas d</Text>
-                        <Text>sdfohsdfkj</Text>
-                    </TouchableOpacity>
-                )
-              })  
-            }
+          <View>
+              { convos?.length > 0 && convos?.map((conversation) => {
+                  return (
+                      <ListItem key={conversation.id} conversation={conversation} />
+                  )
+                })  
+              }
+            </View>
             
         </ScrollView>
       
